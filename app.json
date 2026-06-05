@@ -1,25 +1,44 @@
 {
   "expo": {
-    "name": "mobile-app",
-    "slug": "mobile-app",
+    "name": "IKIGAI Quest",
+    "slug": "ikigai-quest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ikigai.quest",
+      "infoPlist": {
+        "NSCameraUsageDescription": "IKIGAI Quest needs camera access to scan QR codes for attendance and bonus points."
+      }
     },
     "android": {
+      "package": "com.ikigai.quest",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1a1a2e",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA"
+      ]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "plugins": [
+      "expo-camera",
+      "expo-secure-store",
+      "expo-sharing"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ikigai-quest"
+      }
     }
   }
 }

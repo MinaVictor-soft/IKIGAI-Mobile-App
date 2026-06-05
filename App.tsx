@@ -1,20 +1,38 @@
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { LangProvider } from './src/contexts/LangContext';
+import { ViewedProvider } from './src/contexts/ViewedContext';
+import AppNavigator from './src/navigation/AppNavigator';
+import SplashScreen from './src/screens/SplashScreen';
+import OfflineBanner from './src/components/OfflineBanner';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5000,
+      refetchOnWindowFocus: false,
+    },
   },
 });
+
+export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LangProvider>
+        <AuthProvider>
+          <ViewedProvider>
+            <StatusBar style="light" />
+            <OfflineBanner />
+            <AppNavigator />
+            {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+          </ViewedProvider>
+        </AuthProvider>
+      </LangProvider>
+    </QueryClientProvider>
+  );
+}
