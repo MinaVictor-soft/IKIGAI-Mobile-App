@@ -118,13 +118,6 @@ function LeaderboardRow({ entry, rank, isMe }: { entry: LeaderboardEntry; rank: 
           {entry.level && (
             <Text style={styles.rowLevel}>{entry.level.badgeEmoji || '⭐'} {entry.level.name}</Text>
           )}
-          {(entry.church || entry.diocese) && (
-            <Text style={[styles.rowLevel, { fontSize: 11, color: COLORS.textMuted }]}>
-              {entry.church && <Text>{entry.church}</Text>}
-              {entry.church && entry.diocese && <Text> • </Text>}
-              {entry.diocese && <Text>{entry.diocese}</Text>}
-            </Text>
-          )}
         </View>
         {entry.tribe && (
           <View style={[styles.tribeBadge, { backgroundColor: entry.tribe.color + '20' }]}>

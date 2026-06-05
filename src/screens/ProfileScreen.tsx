@@ -126,13 +126,6 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.name}>{currentUser?.name}</Text>
         <Text style={styles.email}>{currentUser?.email}</Text>
-        {(currentUser?.church || currentUser?.diocese) && (
-          <Text style={[styles.email, { marginTop: 4 }]}>
-            {currentUser?.church && <Text>{currentUser.church}</Text>}
-            {currentUser?.church && currentUser?.diocese && <Text> • </Text>}
-            {currentUser?.diocese && <Text>{currentUser.diocese}</Text>}
-          </Text>
-        )}
         <View style={styles.roleBadge}>
           <Text style={styles.roleText}>{currentUser?.role}</Text>
         </View>

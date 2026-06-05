@@ -12,8 +12,6 @@ export interface User {
   sportsXp: number;
   level: Level | null;
   userQrToken: string;
-  church?: string;
-  diocese?: string;
   createdAt: string;
 }
 
@@ -54,8 +52,6 @@ export interface LeaderboardEntry {
   sportsXp: number;
   tribe: Tribe | null;
   level: Level | null;
-  church?: string;
-  diocese?: string;
   rank: number;
 }
 
