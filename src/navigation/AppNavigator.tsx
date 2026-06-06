@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, useEffect } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -12,6 +12,7 @@ import { useViewed } from '../contexts/ViewedContext';
 import { notificationService, startEventListener, stopEventListener } from '../lib/notifications';
 import { pushNotificationService } from '../lib/pushNotifications';
 import { getAccessToken } from '../lib/storage';
+import { getNavConfigAsync, type NavConfig } from '../lib/navConfig';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -85,6 +86,32 @@ function MainTabs() {
   const { data: sessions } = useActiveSessions();
   const { data: history } = useMyXpHistory();
   const { data: publications } = usePublications();
+  const [navConfig, setNavConfig] = useState<NavConfig>({});
+
+  // Load nav config on mount
+  useEffect(() => {
+    const loadNavConfig = async () => {
+      const config = await getNavConfigAsync();
+      setNavConfig(config);
+    };
+    loadNavConfig();
+  }, []);
+
+  // Define all possible tabs with their config keys
+  const allTabs = [
+    { name: 'Home', component: HomeScreen, configKey: 'dashboard' as const, label: 'home' },
+    { name: 'Profile', component: ProfileScreen, configKey: 'profile' as const, label: 'profile' },
+    { name: 'Leaderboard', component: LeaderboardScreen, configKey: 'leaderboard' as const, label: 'leaderboard' },
+    { name: 'Events', component: EventsScreen, configKey: 'events' as const, label: 'events' },
+    { name: 'Quizzes', component: QuizListScreen, configKey: 'quizzes' as const, label: 'quizzes' },
+    { name: 'Library', component: LibraryScreen, configKey: 'library' as const, label: 'library' },
+    { name: 'Sports', component: SportsScreen, configKey: 'sports' as const, label: 'sports' },
+    { name: 'Scan', component: ScannerScreen, configKey: 'scanQr' as const, label: 'scanQr' },
+    { name: 'Info', component: InfoScreen, configKey: 'info' as const, label: 'info' },
+  ];
+
+  // Filter tabs based on nav config
+  const visibleTabs = allTabs.filter(tab => navConfig[tab.configKey] !== false);
 
   // Badge counts
   const submittedIds = new Set((submissions || []).map((s: any) => s.quizId));
@@ -108,8 +135,8 @@ function MainTabs() {
   // - Library: new publications user hasn't opened
   // - Events: sessions user hasn't attended + scheduled/live matches + unsubmitted quizzes
   // - Quizzes: quizzes user hasn't submitted
-  const getBadge = (tab: string) => {
-    switch (tab) {
+  const getBadge = (tabName: string) => {
+    switch (tabName) {
       case 'Events': return eventsCount;
       case 'Library': return newPublications;
       case 'Sports': return liveMatches;
@@ -164,15 +191,47 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('home') }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: t('profile') }} />
-      <Tab.Screen name="Leaderboard" component={LeaderboardScreen} options={{ tabBarLabel: t('leaderboard') }} />
-      <Tab.Screen name="Events" component={EventsScreen} options={{ tabBarLabel: t('events') || 'Events' }} />
-      <Tab.Screen name="Quizzes" component={QuizListScreen} options={{ tabBarLabel: t('quizzes') }} />
-      <Tab.Screen name="Library" component={LibraryScreen} options={{ tabBarLabel: 'Library' }} />
-      <Tab.Screen name="Sports" component={SportsScreen} options={{ tabBarLabel: t('sports') }} />
-      <Tab.Screen name="Scan" component={ScannerScreen} options={{ tabBarLabel: t('scanQr') }} />
-      <Tab.Screen name="Info" component={InfoScreen} options={{ tabBarLabel: 'Info' }} />
+      {visibleTabs.map((tab) => (
+        <Tab.Screen 
+          key={tab.name}
+          name={tab.name as any} 
+          component={tab.component} 
+          options={{ 
+            tabBarLabel: t(tab.label) || tab.label,
+            tabBarIcon: ({ color, size, focused }) => {
+              const iconMapping: { [key: string]: [string, string] } = {
+                Home: ['home', 'home-outline'],
+                Events: ['calendar', 'calendar-outline'],
+                Library: ['book', 'book-outline'],
+                Sports: ['football', 'football-outline'],
+                Leaderboard: ['trophy', 'trophy-outline'],
+                Scan: ['qr-code', 'qr-code-outline'],
+                Quizzes: ['help-circle', 'help-circle-outline'],
+                Profile: ['person', 'person-outline'],
+                Info: ['information-circle', 'information-circle-outline'],
+              };
+              const [focusedIcon, unfocusedIcon] = iconMapping[tab.name] || ['home', 'home-outline'];
+              const iconName = focused ? focusedIcon : unfocusedIcon;
+              const badge = getBadge(tab.name);
+              
+              return (
+                <View style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: focused ? COLORS.primary + '18' : 'transparent',
+                  overflow: 'visible',
+                }}>
+                  <Ionicons name={iconName as keyof typeof Ionicons.glyphMap} size={focused ? 22 : 20} color={color} />
+                  {badge > 0 && <NotificationBadge count={badge} />}
+                </View>
+              );
+            }
+          }} 
+        />
+      ))}
     </Tab.Navigator>
   );
 }
