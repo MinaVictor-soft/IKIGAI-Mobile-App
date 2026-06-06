@@ -61,11 +61,11 @@ export default function ScannerScreen() {
     try {
       let response;
       if (mode === 'attendance') {
-        response = await api.post('/attendance/scan', { qrCode: data });
+        response = await api.post('/attendance/scan', { qrToken: data });
         setResult({ success: true, message: response.data.message || `+${response.data.data?.xpEarned || response.data.data?.xpAwarded || ''} XP earned!` });
         await refreshUser();
       } else if (mode === 'bonus') {
-        response = await api.post('/bonus/claim', { qrCode: data });
+        response = await api.post('/bonus/claim', { token: data });
         setResult({ success: true, message: response.data.message || `+${response.data.data?.xpEarned || ''} XP earned!` });
         await refreshUser();
       } else if (mode === 'staffAward') {
