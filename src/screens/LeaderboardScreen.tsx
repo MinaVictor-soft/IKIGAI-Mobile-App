@@ -234,9 +234,18 @@ function LeaderboardRow({ entry, rank, isMe, onPress }: { entry: LeaderboardEntr
           )}
         </View>
         {(entry.church || entry.diocese) && (
-          <Text style={styles.churchText} numberOfLines={1}>
-            🏛️ {entry.church}{entry.diocese ? ` • ${entry.diocese}` : ''}
-          </Text>
+          <View>
+            {entry.church && (
+              <Text style={styles.churchText} numberOfLines={1}>
+                🏛️ {entry.church}
+              </Text>
+            )}
+            {entry.diocese && (
+              <Text style={[styles.churchText, styles.dioceseText]} numberOfLines={1}>
+                📍 {entry.diocese}
+              </Text>
+            )}
+          </View>
         )}
         {entry.tribe && (
           <View style={[styles.tribeBadge, { backgroundColor: entry.tribe.color + '20' }]}>
@@ -402,6 +411,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  dioceseText: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    marginTop: 1,
   },
   rowXp: {
     fontSize: 16,
