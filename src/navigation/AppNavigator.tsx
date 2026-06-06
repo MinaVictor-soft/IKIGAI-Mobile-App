@@ -10,6 +10,8 @@ import { useAvailableQuizzes, useFootballMatches, useMyQuizSubmissions, useActiv
 import { COLORS } from '../config/constants';
 import { useViewed } from '../contexts/ViewedContext';
 import { notificationService, startEventListener, stopEventListener } from '../lib/notifications';
+import { pushNotificationService } from '../lib/pushNotifications';
+import { getAccessToken } from '../lib/storage';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -176,35 +178,45 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     // Request notification permission on app start
     notificationService.requestPermission().catch(console.error);
+    
+    // Set up push notification listeners
+    const cleanup = pushNotificationService.setupNotificationListeners();
+    return cleanup;
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      // Start listening for new events when user is logged in
-      const getToken = async () => {
+    if (isAuthenticated && user) {
+      // Register for push notifications and start listening for events
+      const setupNotifications = async () => {
         try {
-          const { getAccessToken } = require('../lib/storage');
           const token = await getAccessToken();
           if (token) {
+            // Register push token
+            const pushToken = await pushNotificationService.getPushToken();
+            if (pushToken.token) {
+              await pushNotificationService.registerPushToken(user.userId, pushToken.token, token);
+            }
+
+            // Start event listener
             startEventListener(token);
           }
         } catch (error) {
-          console.error('Failed to start event listener:', error);
+          console.error('Failed to setup notifications:', error);
         }
       };
-      getToken();
+      setupNotifications();
 
       // Cleanup when user logs out
       return () => {
         stopEventListener();
       };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return <LoadingScreen />;
