@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLeaderboard, useTribeLeaderboard } from '../hooks/useApi';
@@ -19,6 +21,7 @@ type Tab = 'individual' | 'tribes';
 
 export default function LeaderboardScreen() {
   const [tab, setTab] = useState<Tab>('individual');
+  const [selectedUser, setSelectedUser] = useState<LeaderboardEntry | null>(null);
   const { user } = useAuth();
   const { t, isRTL } = useLang();
   const { data: leaderboard, refetch: refetchLb, isLoading: lbLoading } = useLeaderboard();
@@ -66,7 +69,12 @@ export default function LeaderboardScreen() {
           }
           contentContainerStyle={styles.list}
           renderItem={({ item, index }) => (
-            <LeaderboardRow entry={item} rank={index + 1} isMe={item.id === user?.id} />
+            <LeaderboardRow 
+              entry={item} 
+              rank={index + 1} 
+              isMe={item.id === user?.id} 
+              onPress={() => setSelectedUser(item)}
+            />
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -94,15 +102,121 @@ export default function LeaderboardScreen() {
           }
         />
       )}
+
+      {/* User Details Modal */}
+      <Modal 
+        visible={!!selectedUser} 
+        transparent 
+        animationType="slide"
+        onRequestClose={() => setSelectedUser(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, isRTL && { flexDirection: 'row-reverse' }]}>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setSelectedUser(null)}
+            >
+              <Ionicons name="close" size={24} color={COLORS.textMuted} />
+            </TouchableOpacity>
+
+            <ScrollView contentContainerStyle={styles.modalScroll}>
+              {selectedUser && (
+                <>
+                  <Text style={[styles.modalTitle, isRTL && styles.textRTL]}>
+                    {selectedUser.name}
+                  </Text>
+
+                  {/* Church & Diocese */}
+                  {(selectedUser.church || selectedUser.diocese) && (
+                    <View style={styles.modalSection}>
+                      <Text style={[styles.modalSectionLabel, isRTL && styles.textRTL]}>
+                        🏛️ {t('church')}
+                      </Text>
+                      <Text style={[styles.modalSectionText, isRTL && styles.textRTL]}>
+                        {selectedUser.church}
+                        {selectedUser.diocese ? ` • ${selectedUser.diocese}` : ''}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* XP Stats */}
+                  <View style={styles.xpGrid}>
+                    <View style={styles.xpCard}>
+                      <Text style={styles.xpCardLabel}>📖 {t('conferenceXp')}</Text>
+                      <Text style={styles.xpCardValue}>{selectedUser.conferenceXp || 0}</Text>
+                    </View>
+                    <View style={styles.xpCard}>
+                      <Text style={styles.xpCardLabel}>⚽ {t('sportsXp')}</Text>
+                      <Text style={styles.xpCardValue}>{selectedUser.sportsXp || 0}</Text>
+                    </View>
+                  </View>
+
+                  {/* Total XP */}
+                  <View style={[styles.modalSection, { backgroundColor: COLORS.primary + '20' }]}>
+                    <Text style={[styles.modalSectionLabel, { color: COLORS.primary }, isRTL && styles.textRTL]}>
+                      {t('totalXp')}
+                    </Text>
+                    <Text style={[styles.totalXpValue, { color: COLORS.primary }]}>
+                      {selectedUser.totalXp}
+                    </Text>
+                  </View>
+
+                  {/* Level */}
+                  {selectedUser.level && (
+                    <View style={styles.modalSection}>
+                      <Text style={[styles.modalSectionLabel, isRTL && styles.textRTL]}>
+                        ⭐ {t('level')}
+                      </Text>
+                      <Text style={[styles.modalSectionText, isRTL && styles.textRTL]}>
+                        {selectedUser.level.name}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Tribe */}
+                  {selectedUser.tribe && (
+                    <View style={[
+                      styles.modalSection, 
+                      { 
+                        backgroundColor: selectedUser.tribe.color + '20',
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                    ]}>
+                      <View 
+                        style={[
+                          styles.tribeDot, 
+                          { backgroundColor: selectedUser.tribe.color }
+                        ]}
+                      />
+                      <View>
+                        <Text style={[styles.modalSectionLabel, isRTL && styles.textRTL]}>
+                          {t('tribe')}
+                        </Text>
+                        <Text style={[
+                          styles.modalSectionText, 
+                          { color: selectedUser.tribe.color },
+                          isRTL && styles.textRTL
+                        ]}>
+                          {selectedUser.tribe.name}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-function LeaderboardRow({ entry, rank, isMe }: { entry: LeaderboardEntry; rank: number; isMe: boolean }) {
+function LeaderboardRow({ entry, rank, isMe, onPress }: { entry: LeaderboardEntry; rank: number; isMe: boolean; onPress: () => void }) {
   const rankColor = rank === 1 ? COLORS.gold : rank === 2 ? COLORS.silver : rank === 3 ? COLORS.bronze : COLORS.textMuted;
 
   return (
-    <View style={[styles.row, isMe && styles.rowHighlight]}>
+    <TouchableOpacity style={[styles.row, isMe && styles.rowHighlight]} onPress={onPress}>
       <View style={styles.rankContainer}>
         {rank <= 3 ? (
           <Text style={[styles.rankMedal, { color: rankColor }]}>
@@ -140,7 +254,7 @@ function LeaderboardRow({ entry, rank, isMe }: { entry: LeaderboardEntry; rank: 
         <Text style={styles.rowXp}>{entry.totalXp}</Text>
         <Text style={styles.xpLabel}>XP</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -340,5 +454,90 @@ const styles = StyleSheet.create({
   },
   textRTL: {
     textAlign: 'right',
+  },
+  /* Modal Styles */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.surface,
+    borderTopLeftRadius: BORDER_RADIUS.lg,
+    borderTopRightRadius: BORDER_RADIUS.lg,
+    paddingTop: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.xl,
+    maxHeight: '85%',
+    minHeight: '50%',
+  },
+  modalCloseButton: {
+    alignSelf: 'flex-end',
+    padding: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  modalScroll: {
+    flexGrow: 1,
+    paddingHorizontal: SPACING.sm,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: SPACING.lg,
+  },
+  modalSection: {
+    backgroundColor: COLORS.bg,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  modalSectionLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xs,
+    fontWeight: '600',
+  },
+  modalSectionText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  totalXpValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginTop: SPACING.sm,
+  },
+  xpGrid: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  xpCard: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  xpCardLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xs,
+  },
+  xpCardValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  tribeDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: SPACING.sm,
   },
 });
