@@ -129,6 +129,11 @@ export default function ProfileScreen() {
         <View style={styles.roleBadge}>
           <Text style={styles.roleText}>{currentUser?.role}</Text>
         </View>
+        {(currentUser?.church || currentUser?.diocese) && (
+          <Text style={styles.churchInfo}>
+            🏛️ {currentUser.church}{currentUser.diocese ? ` • ${currentUser.diocese}` : ''}
+          </Text>
+        )}
       </View>
 
       {/* User QR Code - Staff scans this */}
@@ -521,6 +526,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  churchInfo: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.sm,
   },
   statsGrid: {
     flexDirection: 'row',

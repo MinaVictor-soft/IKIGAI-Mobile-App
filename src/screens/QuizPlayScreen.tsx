@@ -17,6 +17,7 @@ import { useLang } from '../contexts/LangContext';
 import { COLORS, SPACING, BORDER_RADIUS } from '../config/constants';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useQueryClient } from '@tanstack/react-query';
+import { notificationService } from '../lib/notifications';
 
 type QuizPlayRoute = RouteProp<RootStackParamList, 'QuizPlay'>;
 
@@ -75,12 +76,20 @@ export default function QuizPlayScreen() {
         answer,
       }));
       const { data } = await api.post(`/quizzes/${quizId}/submit`, { answers: formattedAnswers });
+      const score = data.data.score;
+      const xpEarned = data.data.xpAwarded || data.data.xpEarned || 0;
+      const passed = score >= 70; // Assuming 70% is passing
+      
       setResult({
-        score: data.data.score,
+        score,
         total: data.data.maxScore || quiz?.questions?.length || 0,
-        xpEarned: data.data.xpAwarded || data.data.xpEarned || 0,
+        xpEarned,
         correctAnswers: data.data.correctAnswers,
       });
+      
+      // Send notification
+      notificationService.notifyQuizResult(score, passed, xpEarned);
+      
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ['myQuizSubmissions'] });
       queryClient.invalidateQueries({ queryKey: ['myQuizResult', quizId] });

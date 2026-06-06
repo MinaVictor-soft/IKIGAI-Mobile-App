@@ -89,17 +89,28 @@ export function useQuizDetail(quizId: string) {
       return {
         ...quiz,
         timeLimit: quiz.timeLimitSeconds || quiz.timeLimit || 0,
-        questions: (quiz.questions || []).map((q: any) => ({
-          id: q.id,
-          text: q.questionText || q.text,
-          options: Array.isArray(q.options)
-            ? q.options.map((o: any) => (typeof o === 'string' ? o : o.text))
-            : [],
-          optionIds: Array.isArray(q.options)
-            ? q.options.map((o: any) => (typeof o === 'string' ? o : o.id))
-            : [],
-          order: q.displayOrder || q.order || 0,
-        })),
+        questions: (quiz.questions || []).map((q: any) => {
+          // For TRUE_FALSE questions, generate options if not provided
+          let options: string[] = [];
+          let optionIds: string[] = [];
+          
+          if (q.questionType === 'TRUE_FALSE') {
+            options = ['True', 'False'];
+            optionIds = ['true', 'false'];
+          } else if (Array.isArray(q.options)) {
+            options = q.options.map((o: any) => (typeof o === 'string' ? o : o.text));
+            optionIds = q.options.map((o: any) => (typeof o === 'string' ? o : o.id));
+          }
+          
+          return {
+            id: q.id,
+            text: q.questionText || q.text,
+            options,
+            optionIds,
+            order: q.displayOrder || q.order || 0,
+            questionType: q.questionType,
+          };
+        }),
       };
     },
     enabled: !!quizId,

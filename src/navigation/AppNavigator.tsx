@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, useEffect } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,6 +9,7 @@ import { useLang } from '../contexts/LangContext';
 import { useAvailableQuizzes, useFootballMatches, useMyQuizSubmissions, useActiveSessions, useMyXpHistory, usePublications } from '../hooks/useApi';
 import { COLORS } from '../config/constants';
 import { useViewed } from '../contexts/ViewedContext';
+import { notificationService, startEventListener, stopEventListener } from '../lib/notifications';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -176,6 +177,34 @@ function MainTabs() {
 
 export default function AppNavigator() {
   const { isLoading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    // Request notification permission on app start
+    notificationService.requestPermission().catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Start listening for new events when user is logged in
+      const getToken = async () => {
+        try {
+          const { getAccessToken } = require('../lib/storage');
+          const token = await getAccessToken();
+          if (token) {
+            startEventListener(token);
+          }
+        } catch (error) {
+          console.error('Failed to start event listener:', error);
+        }
+      };
+      getToken();
+
+      // Cleanup when user logs out
+      return () => {
+        stopEventListener();
+      };
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <LoadingScreen />;

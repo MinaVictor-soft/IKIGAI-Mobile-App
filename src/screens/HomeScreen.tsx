@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  Image,
   RefreshControl,
   Animated,
   Dimensions,
@@ -16,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { useMyProfile, useLeaderboard } from '../hooks/useApi';
 import { COLORS, SPACING, BORDER_RADIUS } from '../config/constants';
+import ConferenceHeader from '../components/ConferenceHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -87,32 +87,7 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
     >
-      {/* Hero Header with gradient */}
-      <LinearGradient
-        colors={['#1e1b4b', '#0F172A']}
-        style={styles.heroSection}
-      >
-        {/* Logos Row */}
-        <View style={styles.logosRow}>
-          <View style={styles.logoContainer}>
-            <Image source={require('../../assets/logo-lagna.png')} style={styles.logoImg} resizeMode="contain" />
-          </View>
-          <View style={styles.heroTitleBlock}>
-            <Text style={styles.heroTitle}>IKIGAI Quest</Text>
-            <Text style={styles.heroJapanese}>生き甲斐</Text>
-          </View>
-          <View style={styles.logoContainer}>
-            <Image source={require('../../assets/logo-oskofia.png')} style={styles.logoImg} resizeMode="contain" />
-          </View>
-        </View>
-
-        {/* Conference subtitle */}
-        <View style={styles.conferenceBanner}>
-          <Text style={styles.conferenceSubtitle}>
-            {lang === 'ar' ? '⛪ مؤتمر لجنة خدمة ثانوى • أسقفية الشباب ⛪' : '⛪ Youth Service Committee • Youth Diocese ⛪'}
-          </Text>
-        </View>
-      </LinearGradient>
+      <ConferenceHeader />
 
       {/* XP Hero Card */}
       <Animated.View style={[styles.xpCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
@@ -219,50 +194,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { paddingBottom: SPACING.xxl },
-  heroSection: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 44,
-    paddingBottom: SPACING.xl,
-    paddingHorizontal: SPACING.lg,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  logosRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.lg,
-  },
-  logoContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 4,
-  },
-  logoImg: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  heroTitleBlock: { alignItems: 'center' },
-  heroTitle: { fontSize: 22, fontWeight: '800', color: COLORS.primary, letterSpacing: 1 },
-  heroJapanese: { fontSize: 11, color: COLORS.accent, letterSpacing: 6, marginTop: 2 },
-  conferenceBanner: {
-    marginTop: SPACING.md,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: 20,
-  },
-  conferenceSubtitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.text,
-    textAlign: 'center',
-  },
   xpCard: {
     marginHorizontal: SPACING.md,
     marginTop: SPACING.md,

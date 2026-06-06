@@ -119,6 +119,11 @@ function LeaderboardRow({ entry, rank, isMe }: { entry: LeaderboardEntry; rank: 
             <Text style={styles.rowLevel}>{entry.level.badgeEmoji || '⭐'} {entry.level.name}</Text>
           )}
         </View>
+        {(entry.church || entry.diocese) && (
+          <Text style={styles.churchText} numberOfLines={1}>
+            🏛️ {entry.church}{entry.diocese ? ` • ${entry.diocese}` : ''}
+          </Text>
+        )}
         {entry.tribe && (
           <View style={[styles.tribeBadge, { backgroundColor: entry.tribe.color + '20' }]}>
             <Text style={[styles.tribeBadgeText, { color: entry.tribe.color }]}>
@@ -278,6 +283,11 @@ const styles = StyleSheet.create({
   tribeBadgeText: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  churchText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   rowXp: {
     fontSize: 16,
