@@ -1,8 +1,8 @@
-// API base URL - using production Replit API
-// Both web and production use the same backend
-const API_URL = 'https://ikigai-backend.replit.app/api/v1';
+// API base URL - local development uses localhost, production uses Replit
+const DEV_API_URL = 'http://localhost:3000/api/v1'; // Local backend for development
+const PROD_API_URL = 'https://ikigai-backend.replit.app/api/v1'; // Production backend on Replit
 
-export const API_BASE_URL = API_URL;
+export const API_BASE_URL = DEV_API_URL;
 
 export const COLORS = {
   // Youth-friendly unisex theme

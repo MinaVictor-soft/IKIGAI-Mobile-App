@@ -10,7 +10,7 @@ export function useMyProfile() {
       const { data } = await api.get('/auth/me');
       return data.data;
     },
-    refetchInterval: 30000,
+    refetchInterval: 5000,
   });
 }
 
@@ -32,7 +32,7 @@ export function useMyRank() {
       const { data } = await api.get('/xp/rank/me');
       return data.data;
     },
-    refetchInterval: 30000,
+    refetchInterval: 5000,
   });
 }
 
@@ -43,7 +43,7 @@ export function useLeaderboard(limit = 50) {
       const { data } = await api.get(`/xp/leaderboard?limit=${limit}`);
       return data.data;
     },
-    refetchInterval: 30000, // Refresh every 30s
+    refetchInterval: 5000,
   });
 }
 
@@ -54,7 +54,7 @@ export function useTribeLeaderboard() {
       const { data } = await api.get('/xp/tribes');
       return data.data;
     },
-    refetchInterval: 30000,
+    refetchInterval: 5000,
   });
 }
 
@@ -76,7 +76,7 @@ export function useAvailableQuizzes() {
       const { data } = await api.get('/quizzes/active');
       return (data.data || []).map((q: any) => ({ ...q, timeLimit: q.timeLimitSeconds || q.timeLimit }));
     },
-    refetchInterval: 10000,
+    refetchInterval: 5000,
   });
 }
 
@@ -146,7 +146,8 @@ export function useActiveSessions() {
       const { data } = await api.get('/attendance/sessions');
       return data.data;
     },
-    refetchInterval: 10000,
+    refetchInterval: 5000,
+  });
   });
 }
 
@@ -158,7 +159,7 @@ export function useFootballMatches() {
       const { data } = await api.get('/sports/matches');
       return data.data;
     },
-    refetchInterval: 30000,
+    refetchInterval: 5000,
   });
 }
 
@@ -202,6 +203,73 @@ export function usePublications(categoryId?: string) {
       const { data } = await api.get(url);
       return data.data;
     },
-    refetchInterval: 10000,
+    refetchInterval: 5000,
+  });
+}
+
+// Tournaments
+export function useTournaments() {
+  return useQuery<any[]>({
+    queryKey: ['tournaments'],
+    queryFn: async () => {
+      const { data } = await api.get('/tournaments');
+      return data.data || [];
+    },
+    refetchInterval: 5000,
+  });
+}
+
+export function useTournament(tournamentId: string) {
+  return useQuery<any>({
+    queryKey: ['tournament', tournamentId],
+    queryFn: async () => {
+      const { data } = await api.get(`/tournaments/${tournamentId}`);
+      return data.data;
+    },
+    refetchInterval: 5000,
+    enabled: !!tournamentId,
+  });
+}
+
+export function useTournamentBracket(tournamentId: string) {
+  return useQuery<any>({
+    queryKey: ['tournament-bracket', tournamentId],
+    queryFn: async () => {
+      const { data } = await api.get(`/tournaments/${tournamentId}/bracket`);
+      return data.data;
+    },
+    refetchInterval: 5000,
+    enabled: !!tournamentId,
+  });
+}
+
+// Admin Settings
+export function useAdminSettings() {
+  return useQuery<{
+    tournamentVisibilityWeb: boolean;
+    tournamentVisibilityMobile: boolean;
+    sportsTabVisibilityWeb: boolean;
+    sportsTabVisibilityMobile: boolean;
+    enableTournamentMatches: boolean;
+    enableRegularSportMatches: boolean;
+  }>({
+    queryKey: ['admin-settings'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/settings');
+      return data.data;
+    },
+    refetchInterval: 60000, // Refresh every 60s
+  });
+}
+
+// Upcoming Tournament Matches (for Events badge)
+export function useUpcomingTournamentMatches() {
+  return useQuery<any[]>({
+    queryKey: ['upcoming-tournament-matches'],
+    queryFn: async () => {
+      const { data } = await api.get('/tournaments/upcoming-matches');
+      return data.data || [];
+    },
+    refetchInterval: 5000,
   });
 }

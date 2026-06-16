@@ -157,10 +157,10 @@ export default function InfoScreen() {
           {lang === 'ar' ? 'تابعونا' : 'Follow Us'}
         </Text>
         <View style={styles.socialRow}>
-          <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F2' + '15' }]} onPress={() => openLink('https://www.facebook.com/youthbishopric')}>
+          <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F2' + '15' }]} onPress={() => openLink('https://www.facebook.com/lagnetsanawy')}>
             <Ionicons name="logo-facebook" size={26} color="#1877F2" />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#FF0000' + '15' }]} onPress={() => openLink('https://www.youtube.com/@youthbishopric')}>
+          <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#FF0000' + '15' }]} onPress={() => openLink('https://www.youtube.com/@lagnetsanawy8545')}>
             <Ionicons name="logo-youtube" size={26} color="#FF0000" />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#E4405F' + '15' }]} onPress={() => openLink('https://www.instagram.com/youthbishopric')}>

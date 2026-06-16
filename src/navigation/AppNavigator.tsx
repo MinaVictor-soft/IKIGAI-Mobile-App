@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
-import { useAvailableQuizzes, useFootballMatches, useMyQuizSubmissions, useActiveSessions, useMyXpHistory, usePublications } from '../hooks/useApi';
+import { useAvailableQuizzes, useFootballMatches, useMyQuizSubmissions, useActiveSessions, useMyXpHistory, usePublications, useAdminSettings, useUpcomingTournamentMatches, useTournaments } from '../hooks/useApi';
 import { COLORS } from '../config/constants';
 import { useViewed } from '../contexts/ViewedContext';
 import { notificationService, startEventListener, stopEventListener } from '../lib/notifications';
@@ -24,6 +24,7 @@ import QuizListScreen from '../screens/QuizListScreen';
 import QuizPlayScreen from '../screens/QuizPlayScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SportsScreen from '../screens/SportsScreen';
+import TournamentScreen from '../screens/TournamentScreen';
 import EventsScreen from '../screens/EventsScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import LoadingScreen from '../screens/LoadingScreen';
@@ -41,6 +42,7 @@ export type MainTabParamList = {
   Events: undefined;
   Library: undefined;
   Sports: undefined;
+  Tournament: undefined;
   Leaderboard: undefined;
   Scan: undefined;
   Quizzes: undefined;
@@ -86,6 +88,9 @@ function MainTabs() {
   const { data: sessions } = useActiveSessions();
   const { data: history } = useMyXpHistory();
   const { data: publications } = usePublications();
+  const { data: adminSettings } = useAdminSettings();
+  const { data: tournamentMatches } = useUpcomingTournamentMatches();
+  const { data: tournaments } = useTournaments();
   const [navConfig, setNavConfig] = useState<NavConfig>({});
 
   // Load nav config on mount
@@ -97,6 +102,10 @@ function MainTabs() {
     loadNavConfig();
   }, []);
 
+  // Determine tab visibility based on admin settings (default true if no settings)
+  const showSportsTab = adminSettings?.sportsTabVisibilityMobile ?? true;
+  const showTournamentTab = adminSettings?.tournamentVisibilityMobile ?? true;
+
   // Define all possible tabs with their config keys
   const allTabs = [
     { name: 'Home', component: HomeScreen, configKey: 'dashboard' as const, label: 'home' },
@@ -105,7 +114,8 @@ function MainTabs() {
     { name: 'Events', component: EventsScreen, configKey: 'events' as const, label: 'events' },
     { name: 'Quizzes', component: QuizListScreen, configKey: 'quizzes' as const, label: 'quizzes' },
     { name: 'Library', component: LibraryScreen, configKey: 'library' as const, label: 'library' },
-    { name: 'Sports', component: SportsScreen, configKey: 'sports' as const, label: 'sports' },
+    ...(showSportsTab ? [{ name: 'Sports', component: SportsScreen, configKey: 'sports' as const, label: 'sports' }] : []),
+    ...(showTournamentTab ? [{ name: 'Tournament', component: TournamentScreen, configKey: 'tournament' as const, label: 'tournament' }] : []),
     { name: 'Scan', component: ScannerScreen, configKey: 'scanQr' as const, label: 'scanQr' },
     { name: 'Info', component: InfoScreen, configKey: 'info' as const, label: 'info' },
   ];
@@ -117,6 +127,7 @@ function MainTabs() {
   const submittedIds = new Set((submissions || []).map((s: any) => s.quizId));
   const newQuizzes = (quizzes || []).filter(q => !submittedIds.has(q.id)).length;
   const liveMatches = (matches || []).filter(m => m.status === 'LIVE').length;
+  const activeTournaments = (tournaments || []).filter(t => t.status === 'LIVE' || t.status === 'GROUP_STAGE').length;
 
   const attendedSessionIds = new Set(
     (history || []).filter(tx => tx.sourceType === 'SESSION' && tx.sourceId).map(tx => tx.sourceId)
@@ -124,8 +135,9 @@ function MainTabs() {
   const now = new Date();
   const upcomingSessions = (sessions || []).filter(s => !attendedSessionIds.has(s.id) && new Date(s.endTime) > now);
   const upcomingMatches = (matches || []).filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE');
+  const upcomingTournamentMatches = (tournamentMatches || []).filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE').length;
   const unsubmittedQuizzes = (quizzes || []).filter(q => !submittedIds.has(q.id));
-  const eventsCount = upcomingSessions.length + upcomingMatches.length + unsubmittedQuizzes.length;
+  const eventsCount = upcomingSessions.length + upcomingMatches.length + upcomingTournamentMatches + unsubmittedQuizzes.length;
 
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const newPublications = (publications || []).filter((p: any) => p.publishedAt && new Date(p.publishedAt) > oneDayAgo && !viewedPublicationIds.has(p.id)).length;
@@ -134,12 +146,14 @@ function MainTabs() {
   // - Sports: live matches user hasn't viewed
   // - Library: new publications user hasn't opened
   // - Events: sessions user hasn't attended + scheduled/live matches + unsubmitted quizzes
+  // - Tournament: tournaments currently LIVE or in GROUP_STAGE
   // - Quizzes: quizzes user hasn't submitted
   const getBadge = (tabName: string) => {
     switch (tabName) {
       case 'Events': return eventsCount;
       case 'Library': return newPublications;
       case 'Sports': return liveMatches;
+      case 'Tournament': return activeTournaments;
       case 'Quizzes': return newQuizzes;
       default: return 0;
     }
@@ -167,7 +181,8 @@ function MainTabs() {
             case 'Events': iconName = focused ? 'calendar' : 'calendar-outline'; break;
             case 'Library': iconName = focused ? 'book' : 'book-outline'; break;
             case 'Sports': iconName = focused ? 'football' : 'football-outline'; break;
-            case 'Leaderboard': iconName = focused ? 'trophy' : 'trophy-outline'; break;
+            case 'Tournament': iconName = focused ? 'trophy' : 'trophy-outline'; break;
+            case 'Leaderboard': iconName = focused ? 'podium' : 'podium-outline'; break;
             case 'Scan': iconName = focused ? 'qr-code' : 'qr-code-outline'; break;
             case 'Quizzes': iconName = focused ? 'help-circle' : 'help-circle-outline'; break;
             case 'Profile': iconName = focused ? 'person' : 'person-outline'; break;
@@ -204,6 +219,7 @@ function MainTabs() {
                 Events: ['calendar', 'calendar-outline'],
                 Library: ['book', 'book-outline'],
                 Sports: ['football', 'football-outline'],
+                Tournament: ['trophy', 'trophy-outline'],
                 Leaderboard: ['trophy', 'trophy-outline'],
                 Scan: ['qr-code', 'qr-code-outline'],
                 Quizzes: ['help-circle', 'help-circle-outline'],
